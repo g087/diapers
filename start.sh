@@ -1,4 +1,4 @@
 #!/bin/bash
-. env
+. envi
 nohup python main.py > /dev/null 2>&1 &
-cat $1 > pid.txt
+echo $! > pid.txt
