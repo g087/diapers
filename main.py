@@ -1,65 +1,42 @@
-import os
-import openai
-import argparse
 import logging
-import re
 from flask import Flask, request, jsonify
 
 logging.basicConfig(filename='log.txt', level=logging.DEBUG)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description="Diapers REST API")
-parser.add_argument(
-  "--inventory-size",
-  type=int,
-  default=0,
-  help="Initial inventory size",
-)
-args = parser.parse_args()
-inventory_size = args.inventory_size  # Set initial inventory size
+nb_diapers = 0
 
 app = Flask(__name__)
 
 
 @app.route('/count', methods=['GET'])
 def count():
-  return jsonify({"count": inventory_size})
+  return jsonify({"count": nb_diapers})
 
 
-@app.route('/event', methods=['POST'])
-def event():
-  data = request.get_json()
-  prompt = data["prompt"]
+@app.route('/diaper', methods=['POST'])
+def diaper():
+  global nb_diapers
+  nb_diapers -= 1
+  logging.debug(f"One diaper used, available diapers {nb_diapers}")
+  return jsonify({"count": nb_diapers})
 
-  global inventory_size  # Use the global variable
-  challenge = f"I started with {inventory_size} diapers. Then {prompt}. How much do I have now?"
 
-  logging.debug(f"Challenge sent to OpenAI GPT API: {challenge}")
+@app.route('/pack', methods=['POST'])
+def pack():
+  global nb_diapers
+  pack_size = int(request.get_json()["pack_size"])
+  nb_diapers += pack_size
+  logging.debug(
+    f"One pack of {pack_size} diapers bought, available diapers {nb_diapers}")
+  return jsonify({"count": nb_diapers})
 
-  # Call OpenAI GPT-3 API to generate a completion
-  completions = openai.Completion.create(
-    engine="text-davinci-003",
-    prompt=challenge,
-    max_tokens=512,
-    n=1,
-    stop=None,
-    temperature=0,
-  )
-  logging.debug(f"Completions received from OpenAI GPT API: {completions}")
 
-  answer = completions.choices[0].text.strip()
-
-  # assuming answer variable contains the word "diapers" preceded by a integer
-  match = re.search(r'(\d+)\s*diapers', answer)
-  if match:
-    inventory_size = int(match.group(1))
-    logging.debug(f"New inventory size: {inventory_size}")
-
-  # Return a JSON response with the new inventory size and the answer
-  result = {"count": inventory_size, "answer": answer}
-  return jsonify(result)
+@app.route('/update', methods=['POST'])
+def update():
+  global nb_diapers
+  nb_diapers = int(request.get_json()["new_count"])
+  logging.debug(f"Inventory size updated, available diapers {nb_diapers}")
+  return jsonify({"count": nb_diapers})
 
 
 def main():
