@@ -29,7 +29,8 @@ def pack():
   global nb_diapers
   pack_size = int(request.get_json()["pack_size"])
   nb_diapers += pack_size
-  print(f"One pack of {pack_size} diapers bought, available diapers {nb_diapers}")
+  print(
+    f"One pack of {pack_size} diapers bought, available diapers {nb_diapers}")
   return jsonify({"count": nb_diapers})
 
 
@@ -39,3 +40,7 @@ def update():
   nb_diapers = int(request.get_json()["new_count"])
   print(f"Inventory size updated, available diapers {nb_diapers}")
   return jsonify({"count": nb_diapers})
+
+
+if __name__ == '__main__':
+  app.run(host='0.0.0.0', port=9090, debug=True)
