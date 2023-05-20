@@ -1,4 +1,5 @@
 import argparse
+import logging
 from flask import Flask, request, jsonify
 
 parser = argparse.ArgumentParser()
@@ -6,7 +7,8 @@ parser.add_argument('--diapers', type=int, help='initial diapers stock size')
 args = parser.parse_args()
 nb_diapers = args.diapers or 0
 
-print(f"Initial inventory size is: {nb_diapers}")
+logging.basicConfig(filename='log.txt', level=logging.DEBUG)
+logging.info(f"Initial inventory size : {nb_diapers}")
 
 app = Flask(__name__)
 
@@ -20,7 +22,7 @@ def count():
 def diaper():
   global nb_diapers
   nb_diapers -= 1
-  print(f"One diaper used, available diapers {nb_diapers}")
+  logging.info(f"One diaper used, available diapers {nb_diapers}")
   return jsonify({"count": nb_diapers})
 
 
@@ -29,8 +31,8 @@ def pack():
   global nb_diapers
   pack_size = int(request.get_json()["pack_size"])
   nb_diapers += pack_size
-  print(
-    f"One pack of {pack_size} diapers bought, available diapers {nb_diapers}")
+  logging.info(
+    f"A pack of {pack_size} diapers bought, available diapers {nb_diapers}")
   return jsonify({"count": nb_diapers})
 
 
@@ -38,7 +40,7 @@ def pack():
 def update():
   global nb_diapers
   nb_diapers = int(request.get_json()["new_count"])
-  print(f"Inventory size updated, available diapers {nb_diapers}")
+  logging.info(f"Inventory size updated, available diapers {nb_diapers}")
   return jsonify({"count": nb_diapers})
 
 
